@@ -48,6 +48,7 @@ void makeContext(ucontext_t *context, void* (start), void *arg, ucontext_t* link
         return;
     }
 
+
     context = (ucontext_t*) malloc(sizeof(ucontext_t));
     if(context == NULL ){
         context = NULL;
@@ -97,15 +98,21 @@ void finalizar(){
 
 int inicializar(){
     flag_init = 1;
+
+    init = malloc(sizeof(ucontext_t*));
     makeContext(init, escalonador, NULL, NULL);
+    end = malloc(sizeof(ucontext_t*));
     makeContext(end, finalizar, NULL, NULL);
 
     MAIN = (TCB_t*) malloc(sizeof(TCB_t));
     if(init == NULL || end == NULL || MAIN == NULL)
         return -1;
 
+    apto = malloc(sizeof(PFILA2));
     CreateFila2(apto);
+    bloqueado = malloc(sizeof(PFILA2));
     CreateFila2(bloqueado);
+    exec = malloc(sizeof(PFILA2));
     CreateFila2(exec);
 
     MAIN->state = PROCST_EXEC;
@@ -130,12 +137,12 @@ int ccreate (void* (*start)(void*), void *arg, int prio){
         return -1;
     }
 
-    //AppendFila2(apto, newTCB);
+    AppendFila2(apto, newTCB);
 
     return 0;
 }
 
 int cidentify (char *name, int size) {
-    strncpy (name, "DOUGLAS SOUZA FLORES - 262524\nGiulia - 000000", size);
+    strncpy (name, "Douglas Souza Flores - 262524\nGiulia - 000000", size);
     return 0;
 }

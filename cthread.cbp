@@ -33,21 +33,15 @@
 		</Compiler>
 		<Unit filename="bin/support.o" />
 		<Unit filename="exemplos/Makefile" />
-		<Unit filename="exemplos/exemplo.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="exemplos/mandel.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="exemplos/series.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="exemplos/teste_vetor.c">
+		<Unit filename="exemplos/exemplo2.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="include/cdata.h" />
 		<Unit filename="include/cthread.h" />
 		<Unit filename="include/support.h" />
+		<Unit filename="src/cthread.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="src/lib.c">
 			<Option compilerVar="CC" />
 		</Unit>
