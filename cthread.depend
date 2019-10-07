@@ -1,0 +1,52 @@
+# depslib dependency file v1.0
+1505836350 source:/home/aluno/Repositorios/cthread/exemplos/exemplo.c
+	"../include/support.h"
+	"../include/cthread.h"
+	<stdio.h>
+
+1567369704 /home/aluno/Repositorios/cthread/include/support.h
+
+1553892179 /home/aluno/Repositorios/cthread/include/cthread.h
+	"support.h"
+
+1570453163 source:/home/aluno/Repositorios/cthread/exemplos/exemplo2.c
+	<stdio.h>
+	"../include/cthread.h"
+
+1505836397 source:/home/aluno/Repositorios/cthread/exemplos/mandel.c
+	"../include/support.h"
+	"../include/cthread.h"
+	<stdio.h>
+	<stdlib.h>
+	<math.h>
+
+1505836441 source:/home/aluno/Repositorios/cthread/exemplos/series.c
+	"../include/support.h"
+	"../include/cthread.h"
+	<stdio.h>
+
+1505836456 source:/home/aluno/Repositorios/cthread/exemplos/teste_vetor.c
+	"../include/support.h"
+	"../include/cthread.h"
+	<stdio.h>
+	<stdlib.h>
+
+1570453048 source:/home/aluno/Repositorios/cthread/src/cthread.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	"../include/support.h"
+	"../include/cthread.h"
+	"../include/cdata.h"
+	<signal.h>
+
+1553960501 /home/aluno/Repositorios/cthread/include/cdata.h
+	"ucontext.h"
+
+1570449247 source:/home/aluno/Repositorios/cthread/src/lib.c
+	<stdio.h>
+	<string.h>
+	"../include/support.h"
+	"../include/cthread.h"
+	"../include/cdata.h"
+

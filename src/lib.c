@@ -6,7 +6,7 @@
 #include "../include/cdata.h"
 
 
-int ccreate (void* (*start)(void*), void *arg, int prio) {
+/*int ccreate (void* (*start)(void*), void *arg, int prio) {
 	return -1;
 }
 
@@ -33,6 +33,6 @@ int csignal(csem_t *sem) {
 int cidentify (char *name, int size) {
 	strncpy (name, "Sergio Cechin - 2019/2 - Teste de compilacao.", size);
 	return 0;
-}
+}*/
 
 
