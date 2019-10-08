@@ -10,7 +10,6 @@
 
 #define STACK_SIZE SIGSTKSZ
 #define MAIN_TID 0
-#define INICIALIZADA 1
 #define TRUE 1
 #define FALSE 0
 
@@ -26,30 +25,11 @@ int novoTID(){
     return id_atual;
 }
 
-TCB_t* createTCB(){
-    TCB_t *newTCB = (TCB_t*) malloc(sizeof(TCB_t));
-
-    if(newTCB == NULL){
-        return NULL;
-    }
-
-    newTCB->tid = novoTID();
-    newTCB->prio = 0;
-    newTCB->state = PROCST_APTO;
-
-    return newTCB;
-}
-
 void makeContext(ucontext_t *context, void* (start), void *arg, ucontext_t* link){
     char *pilha = (char*) malloc(STACK_SIZE);
 
-    if(pilha == NULL )
-        return;
-
-
-    context = (ucontext_t*) malloc(sizeof(ucontext_t));
-    if(context == NULL)
-        return;
+    if(pilha == NULL)
+        printf("\nFalha na criacao da pilha\n");
 
     getcontext(context);
     context->uc_stack.ss_sp = pilha;
@@ -60,7 +40,7 @@ void makeContext(ucontext_t *context, void* (start), void *arg, ucontext_t* link
 
 TCB_t* getNextApto(){
     TCB_t *nextProcess;
-    nextProcess = malloc(sizeof(TCB_t));
+    nextProcess = (TCB_t*) malloc(sizeof(TCB_t));
     PNODE2 temp;
 
     if(FirstFila2(apto) == 0){
@@ -99,13 +79,13 @@ void finalizar(){
 int initialize(){
     flag_init = 1;
 
-    init = malloc(sizeof(ucontext_t*));
+    /*init = (ucontext_t*) malloc(sizeof(ucontext_t));
     makeContext(init, escalonador, NULL, NULL);
-    end = malloc(sizeof(ucontext_t*));
-    makeContext(end, finalizar, NULL, NULL);
+    end = (ucontext_t*) malloc(sizeof(ucontext_t));
+    makeContext(end, finalizar, NULL, NULL);*/
 
     MAIN = (TCB_t*) malloc(sizeof(TCB_t));
-    if(init == NULL || end == NULL || MAIN == NULL)
+    if( MAIN == NULL)
         return -1;
 
     apto = malloc(sizeof(PFILA2));
@@ -119,14 +99,7 @@ int initialize(){
     MAIN->tid = MAIN_TID;
     MAIN->prio = 0;
 
-    //char *pilha = (char*) malloc(STACK_SIZE);
     getcontext(&(MAIN->context));
-    /*ucontext_t* cont = &(MAIN->context);
-    cont->uc_stack.ss_sp = pilha;
-    cont->uc_stack.ss_size = STACK_SIZE;
-    cont->uc_link = NULL;*/
-    //Daqui para baixo esta errado
-    //makecontext(&(MAIN->context), &main, 0);
     AppendFila2(exec, MAIN);
 
     return 0;
@@ -137,15 +110,23 @@ int ccreate (void* (*start)(void*), void *arg, int prio){
         if(initialize() != 0)
             return -1;
 
-    TCB_t *newTCB;
-    newTCB = createTCB();
-    makeContext(&(newTCB->context),start, arg, end);
+    TCB_t *newTCB = (TCB_t*) malloc(sizeof(TCB_t));
+
+    if(newTCB == NULL)
+        return -1;
+
+    newTCB->tid = novoTID();
+    newTCB->prio = 0;
+    newTCB->state = PROCST_APTO;
+
+    makeContext(&(newTCB->context),start, arg, &(MAIN->context));
 
     if(newTCB == NULL || &(newTCB->context) == NULL){
         return -1;
     }
 
     AppendFila2(apto, newTCB);
+
 
     return 0;
 }
@@ -154,25 +135,27 @@ int cyield(void){
     TCB_t *tcb_current = exec->first->node;
     //Adiciona o TCB da thread em execucao no final da fila de apto
     tcb_current->state = PROCST_APTO;
-    PNODE2 newNode = (PNODE2) malloc(sizeof(NODE2));
-    newNode->node = tcb_current;
-    if(tcb_current == NULL || newNode == NULL)
+    if(tcb_current == NULL)
         return -1;
-    AppendFila2(apto, newNode);
+    AppendFila2(apto, tcb_current);
 
+    printf("TID Saindo: %d\n", tcb_current->tid);
     //Retira o Primeiro da fila de apto e insere na fila de executando
-    TCB_t* newTCB = malloc(sizeof(TCB_t));
+    TCB_t* newTCB = (TCB_t*) malloc(sizeof(TCB_t));
     newTCB = getNextApto();
 
     newTCB->state = PROCST_EXEC;
-    printf("Novo TID: %d\n", tcb_current->tid);
+    printf("Novo TID: %d\n", newTCB->tid);
     if(FirstFila2(exec) == 0)
         DeleteAtIteratorFila2(exec);
     AppendFila2(exec, newTCB);
 
     ucontext_t* cont = &(tcb_current->context);
+    ucontext_t* cont2 = &(newTCB->context);
+    newTCB = exec->first->node;
+    printf("TID Exec: %d\n", newTCB->tid);
     //setcontext(&(tcb_current->context));
-    //return swapcontext(&(tcb_current->context), &(newTCB->context));
+    return swapcontext(&(tcb_current->context), &(newTCB->context));
 }
 
 int csem_init(csem_t *sem, int count){
@@ -194,7 +177,7 @@ int csem_init(csem_t *sem, int count){
 
 }
 
-int cwait(csem_t *sem){
+/*int cwait(csem_t *sem){
     TCB_t* tcb_current = exec->first->node;
 
     if(sem->count > 0){
@@ -205,7 +188,7 @@ int cwait(csem_t *sem){
         AppendFila2(sem->fila, tcb_current);
     }
 
-}
+}*/
 
 int cidentify (char *name, int size) {
     strncpy (name, "Douglas Souza Flores - 262524\nGiulia - 000000", size);
