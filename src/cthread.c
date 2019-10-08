@@ -43,17 +43,13 @@ TCB_t* createTCB(){
 void makeContext(ucontext_t *context, void* (start), void *arg, ucontext_t* link){
     char *pilha = (char*) malloc(STACK_SIZE);
 
-    if(pilha == NULL ){
-        context = NULL;
+    if(pilha == NULL )
         return;
-    }
 
 
     context = (ucontext_t*) malloc(sizeof(ucontext_t));
-    if(context == NULL ){
-        context = NULL;
+    if(context == NULL)
         return;
-    }
 
     getcontext(context);
     context->uc_stack.ss_sp = pilha;
@@ -64,10 +60,11 @@ void makeContext(ucontext_t *context, void* (start), void *arg, ucontext_t* link
 
 TCB_t* getNextApto(){
     TCB_t *nextProcess;
+    nextProcess = malloc(sizeof(TCB_t));
     PNODE2 temp;
 
     if(FirstFila2(apto) == 0){
-        temp = GetAtIteratorFila2(apto);
+        temp = apto->first;
         nextProcess = temp->node;
         DeleteAtIteratorFila2(apto);
 
@@ -122,6 +119,14 @@ int initialize(){
     MAIN->tid = MAIN_TID;
     MAIN->prio = 0;
 
+    //char *pilha = (char*) malloc(STACK_SIZE);
+    getcontext(&(MAIN->context));
+    /*ucontext_t* cont = &(MAIN->context);
+    cont->uc_stack.ss_sp = pilha;
+    cont->uc_stack.ss_size = STACK_SIZE;
+    cont->uc_link = NULL;*/
+    //Daqui para baixo esta errado
+    //makecontext(&(MAIN->context), &main, 0);
     AppendFila2(exec, MAIN);
 
     return 0;
@@ -146,8 +151,9 @@ int ccreate (void* (*start)(void*), void *arg, int prio){
 }
 
 int cyield(void){
-    TCB_t *tcb_current = exec->first;
-    //Adiciona o TCB da thread em execução no final da fila de apto
+    TCB_t *tcb_current = exec->first->node;
+    //Adiciona o TCB da thread em execucao no final da fila de apto
+    tcb_current->state = PROCST_APTO;
     PNODE2 newNode = (PNODE2) malloc(sizeof(NODE2));
     newNode->node = tcb_current;
     if(tcb_current == NULL || newNode == NULL)
@@ -155,12 +161,18 @@ int cyield(void){
     AppendFila2(apto, newNode);
 
     //Retira o Primeiro da fila de apto e insere na fila de executando
-    TCB_t* newTCB = getNextApto();
+    TCB_t* newTCB = malloc(sizeof(TCB_t));
+    newTCB = getNextApto();
+
+    newTCB->state = PROCST_EXEC;
+    printf("Novo TID: %d\n", tcb_current->tid);
     if(FirstFila2(exec) == 0)
         DeleteAtIteratorFila2(exec);
     AppendFila2(exec, newTCB);
 
-    return swapcontext(&(tcb_current->context), &(newTCB->context));
+    ucontext_t* cont = &(tcb_current->context);
+    //setcontext(&(tcb_current->context));
+    //return swapcontext(&(tcb_current->context), &(newTCB->context));
 }
 
 int csem_init(csem_t *sem, int count){
@@ -179,6 +191,19 @@ int csem_init(csem_t *sem, int count){
     sem->fila = bloc_sem;
 
     return 0;
+
+}
+
+int cwait(csem_t *sem){
+    TCB_t* tcb_current = exec->first->node;
+
+    if(sem->count > 0){
+        sem->count--;
+    }
+    else{
+        sem->count--;
+        AppendFila2(sem->fila, tcb_current);
+    }
 
 }
 
