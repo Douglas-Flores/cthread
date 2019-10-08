@@ -65,13 +65,16 @@ void makeContext(ucontext_t *context, void* (start), void *arg, ucontext_t* link
 TCB_t* getNextApto(){
     TCB_t *nextProcess;
     PNODE2 temp;
+
     if(FirstFila2(apto) == 0){
         temp = GetAtIteratorFila2(apto);
         nextProcess = temp->node;
         DeleteAtIteratorFila2(apto);
+
         return nextProcess;
     }
-    return 1;
+
+    return -1;
 }
 
 void escalonador(){
@@ -96,7 +99,7 @@ void finalizar(){
     setcontext(init);*/
 }
 
-int inicializar(){
+int initialize(){
     flag_init = 1;
 
     init = malloc(sizeof(ucontext_t*));
@@ -120,14 +123,14 @@ int inicializar(){
     MAIN->prio = 0;
 
     AppendFila2(exec, MAIN);
-    executando = MAIN;
 
     return 0;
 }
 
 int ccreate (void* (*start)(void*), void *arg, int prio){
     if(flag_init != 1)
-        inicializar();
+        if(initialize() != 0)
+            return -1;
 
     TCB_t *newTCB;
     newTCB = createTCB();
@@ -140,6 +143,43 @@ int ccreate (void* (*start)(void*), void *arg, int prio){
     AppendFila2(apto, newTCB);
 
     return 0;
+}
+
+int cyield(void){
+    TCB_t *tcb_current = exec->first;
+    //Adiciona o TCB da thread em execução no final da fila de apto
+    PNODE2 newNode = (PNODE2) malloc(sizeof(NODE2));
+    newNode->node = tcb_current;
+    if(tcb_current == NULL || newNode == NULL)
+        return -1;
+    AppendFila2(apto, newNode);
+
+    //Retira o Primeiro da fila de apto e insere na fila de executando
+    TCB_t* newTCB = getNextApto();
+    if(FirstFila2(exec) == 0)
+        DeleteAtIteratorFila2(exec);
+    AppendFila2(exec, newTCB);
+
+    return swapcontext(&(tcb_current->context), &(newTCB->context));
+}
+
+int csem_init(csem_t *sem, int count){
+    //Inicializa contador
+    sem->count = count;
+
+    //Inicializa fila
+    PFILA2 bloc_sem = malloc(sizeof(PFILA2));
+
+    if(bloc_sem == NULL)
+        return -1;
+
+    if(CreateFila2(bloc_sem) != 0)
+        return -1;
+
+    sem->fila = bloc_sem;
+
+    return 0;
+
 }
 
 int cidentify (char *name, int size) {
