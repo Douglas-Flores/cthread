@@ -64,9 +64,9 @@ void escalonador(){
     setcontext(&(executando->context));
 }
 
-void finalizar(){
-    TCB_t *tcb_current = executando;
-    getcontext(&(tcb_current->context));
+void terminar(){
+    TCB_t *tcb_current = exec->first->node;
+    //getcontext(&(tcb_current->context));
 
     /*if(estaSendoEsperada(tcb_atual->tid)){
     terminaJoin(tcb_atual->tid);
@@ -74,15 +74,31 @@ void finalizar(){
     free(&(tcb_atual->context));
     free(tcb_atual);
     setcontext(init);*/
+
+    FirstFila2(exec);
+    DeleteAtIteratorFila2(exec);
+    //free(&(tcb_current->context));
+    //free(tcb_current);
+
+    TCB_t* newTCB = (TCB_t*) malloc(sizeof(TCB_t));
+    newTCB = getNextApto();
+    newTCB->state = PROCST_EXEC;
+
+    AppendFila2(exec, newTCB);
+
+    swapcontext(&(tcb_current->context), &(newTCB->context));
+
+    free(&(tcb_current->context));
+    free(tcb_current);
 }
 
 int initialize(){
     flag_init = 1;
 
     /*init = (ucontext_t*) malloc(sizeof(ucontext_t));
-    makeContext(init, escalonador, NULL, NULL);
-    end = (ucontext_t*) malloc(sizeof(ucontext_t));
-    makeContext(end, finalizar, NULL, NULL);*/
+    makeContext(init, escalonador, NULL, NULL);*/
+    end = (ucontext_t *) malloc(sizeof(ucontext_t));
+    makeContext(end, terminar, 0, &(MAIN->context));
 
     MAIN = (TCB_t*) malloc(sizeof(TCB_t));
     if( MAIN == NULL)
@@ -119,7 +135,7 @@ int ccreate (void* (*start)(void*), void *arg, int prio){
     newTCB->prio = 0;
     newTCB->state = PROCST_APTO;
 
-    makeContext(&(newTCB->context),start, arg, &(MAIN->context));
+    makeContext(&(newTCB->context),start, arg, end);
 
     if(newTCB == NULL || &(newTCB->context) == NULL){
         return -1;
@@ -143,18 +159,13 @@ int cyield(void){
     //Retira o Primeiro da fila de apto e insere na fila de executando
     TCB_t* newTCB = (TCB_t*) malloc(sizeof(TCB_t));
     newTCB = getNextApto();
-
     newTCB->state = PROCST_EXEC;
-    printf("Novo TID: %d\n", newTCB->tid);
+
     if(FirstFila2(exec) == 0)
         DeleteAtIteratorFila2(exec);
+
     AppendFila2(exec, newTCB);
 
-    ucontext_t* cont = &(tcb_current->context);
-    ucontext_t* cont2 = &(newTCB->context);
-    newTCB = exec->first->node;
-    printf("TID Exec: %d\n", newTCB->tid);
-    //setcontext(&(tcb_current->context));
     return swapcontext(&(tcb_current->context), &(newTCB->context));
 }
 
