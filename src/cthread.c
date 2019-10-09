@@ -16,7 +16,7 @@
 int flag_init = 0;
 int id_atual = 0;
 
-PFILA2 apto, bloqueado, exec;
+PFILA2 apto, bloqueado, exec, join;
 ucontext_t *init = NULL, *end = NULL;
 TCB_t *MAIN, *executando;
 
@@ -54,7 +54,7 @@ TCB_t* getNextApto(){
     return -1;
 }
 
-void escalonador(){
+/*void escalonador(){
     executando = getNextApto();
     if(executando == NULL){
         printf("\nErro Escalonador\n");
@@ -62,7 +62,7 @@ void escalonador(){
     }
     executando->state = PROCST_EXEC;
     setcontext(&(executando->context));
-}
+}*/
 
 void terminar(){
     TCB_t *tcb_current = exec->first->node;
@@ -70,8 +70,12 @@ void terminar(){
     FirstFila2(exec);
     DeleteAtIteratorFila2(exec);
 
+    if(isWaited(tcb_current->tid) == TRUE)
+        unblockWaiting(tcb_current);
+
     TCB_t* newTCB = (TCB_t*) malloc(sizeof(TCB_t));
     newTCB = getNextApto();
+
     newTCB->state = PROCST_EXEC;
 
     AppendFila2(exec, newTCB);
@@ -80,6 +84,79 @@ void terminar(){
 
     free(&(tcb_current->context));
     free(tcb_current);
+}
+
+int unblockWaiting(TCB_t* process){
+    if(NextFila2(join) == 1){
+        printf("Fila Vazia!\n");
+        return -1;
+    }
+    if(FirstFila2(join) != 0)
+        return FALSE;
+    PNODE2 newNode = join->first;
+    TCB_t *tcb_waiting = newNode->node;
+    join->it = join->first;
+    int *waited;
+    int i = 0;
+
+    do{
+        if(i==0)
+            i = 1;
+        else
+            newNode = newNode->next;
+
+        tcb_waiting = newNode->node;
+
+        NextFila2(join);
+        newNode = newNode->next;
+        waited = newNode->node;
+
+        if(*waited == process->tid){
+            DeleteAtIteratorFila2(join);
+            join->it = newNode->ant;
+            DeleteAtIteratorFila2(join);
+            tcb_waiting->state = PROCST_APTO;
+            AppendFila2(apto, tcb_waiting);
+
+            return 0;
+        }
+
+    }while(NextFila2(join) == 0);
+
+    return 0;
+}
+
+int isWaited(int tid){
+    if(NextFila2(join) == 1)
+        return FALSE;
+
+    if(FirstFila2(join) != 0)
+        return FALSE;
+
+    PNODE2 newNode = join->first;
+    TCB_t *tcb_current = newNode->node;
+    join->it = join->first;
+    int *waited;
+    int i = 0;
+
+    do{
+        if(i==0)
+            i = 1;
+        else
+            newNode = newNode->next;
+
+        tcb_current = newNode->node;
+
+        NextFila2(join);
+        newNode = newNode->next;
+        waited = newNode->node;
+
+        if(*waited == tid)
+            return TRUE;
+
+    }while(NextFila2(join) == 0);
+
+    return FALSE;
 }
 
 int initialize(){
@@ -100,6 +177,8 @@ int initialize(){
     CreateFila2(bloqueado);
     exec = malloc(sizeof(PFILA2));
     CreateFila2(exec);
+    join = malloc(sizeof(PFILA2));
+    CreateFila2(join);
 
     MAIN->state = PROCST_EXEC;
     MAIN->tid = MAIN_TID;
@@ -109,6 +188,34 @@ int initialize(){
     AppendFila2(exec, MAIN);
 
     return 0;
+}
+
+void printJoinQueue(){
+    if(NextFila2(join) == 1){
+        printf("Fila Vazia!\n");
+        return;
+    }
+    FirstFila2(join);
+    PNODE2 newNode = join->first;
+    TCB_t *tcb_current = newNode->node;
+    join->it = join->first;
+    int *waited;
+    int i = 0;
+
+    do{
+        if(i==0)
+            i = 1;
+        else
+            newNode = newNode->next;
+
+        tcb_current = newNode->node;
+        printf("Esperando: %d\n", tcb_current->tid);
+        NextFila2(join);
+        newNode = newNode->next;
+        waited = newNode->node;
+        printf("Esperado: %d\n\n", *waited);
+    }while(NextFila2(join) == 0);
+
 }
 
 int ccreate (void* (*start)(void*), void *arg, int prio){
@@ -145,7 +252,6 @@ int cyield(void){
         return -1;
     AppendFila2(apto, tcb_current);
 
-    printf("TID Saindo: %d\n", tcb_current->tid);
     //Retira o Primeiro da fila de apto e insere na fila de executando
     TCB_t* newTCB = (TCB_t*) malloc(sizeof(TCB_t));
     newTCB = getNextApto();
@@ -181,12 +287,86 @@ int csem_init(csem_t *sem, int count){
 int cwait(csem_t *sem){
     TCB_t* tcb_current = exec->first->node;
 
-    sem->count--;
     if(sem->count <= 0){
+        //Adiciona o TCB da thread em execucao no final da fila de bloqueado do semáforo
+        tcb_current->state = PROCST_BLOQ;
+        if(tcb_current == NULL)
+            return -1;
         AppendFila2(sem->fila, tcb_current);
-        //CHAMAR ESCALONADOR
+
+        //Retira o Primeiro da fila de apto e insere na fila de executando
+        TCB_t* newTCB = (TCB_t*) malloc(sizeof(TCB_t));
+        newTCB = getNextApto();
+        newTCB->state = PROCST_EXEC;
+
+        if(FirstFila2(exec) == 0)
+            DeleteAtIteratorFila2(exec);
+        else
+            return -1;
+
+        AppendFila2(exec, newTCB);
+
+        sem->count--;
+        return swapcontext(&(tcb_current->context), &(newTCB->context));
     }
 
+    sem->count--;
+    return 0;
+
+}
+
+int csignal(csem_t *sem){
+    TCB_t* tcb_current = exec->first->node;
+
+    if(sem->count <= 0 || NextFila2(sem->fila) != 1){
+        //printf("TID Saindo: %d\n", tcb_current->tid);
+        //Retira o Primeiro da fila de bloqueados do semáforo e insere na fila de aptos
+        TCB_t* newTCB = (TCB_t*) malloc(sizeof(TCB_t));
+        newTCB = sem->fila->first->node;
+        newTCB->state = PROCST_APTO;
+
+        if(FirstFila2(sem->fila) == 0)
+            DeleteAtIteratorFila2(sem->fila);
+        else
+            return -1;
+
+        AppendFila2(apto, newTCB);
+    }
+
+    sem->count++;
+
+    return 0;
+}
+
+int cjoin(int tid){
+    if(isWaited(tid) == TRUE)
+        return -1;
+
+    TCB_t *tcb_current = exec->first->node;
+    if(tcb_current == NULL)
+        return -1;
+    //Adiciona o processo 'waiting' na fila de join
+    FirstFila2(join);
+    AppendFila2(join, tcb_current);
+    //Adiciona o processo 'waited' na fila de join
+    AppendFila2(join, &tid);
+    //Adiciona o TCB da thread em execucao no final da fila de bloqueados
+    tcb_current->state = PROCST_BLOQ;
+    AppendFila2(bloqueado, tcb_current);
+
+    //Retira o Primeiro da fila de apto e insere na fila de executando
+    TCB_t* newTCB = (TCB_t*) malloc(sizeof(TCB_t));
+    newTCB = getNextApto();
+    newTCB->state = PROCST_EXEC;
+
+    if(FirstFila2(exec) == 0)
+        DeleteAtIteratorFila2(exec);
+
+    AppendFila2(exec, newTCB);
+
+    printJoinQueue();
+
+    return swapcontext(&(tcb_current->context), &(newTCB->context));
 }
 
 int cidentify (char *name, int size) {

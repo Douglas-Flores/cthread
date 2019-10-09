@@ -12,9 +12,13 @@
 #include "ucontext.h"
 #define STACK_SIZE SIGSTKSZ
 
+csem_t* sem;
+
 void* func0(void *arg) {
 	printf("Eu sou a thread ID0 imprimindo %d\n", *((int *)arg));
-	return;
+	//csignal(sem);
+	cjoin(2);
+	printf("Balela\n");
 }
 
 void* func1(void *arg) {
@@ -27,14 +31,16 @@ int main() {
 	int i=15;
 
 	id0 = ccreate(func0, (void *)&i, 0);
-	csem_t* sem = malloc(sizeof(csem_t));
-	csem_init(sem, 1);
+	/*sem = malloc(sizeof(csem_t));
+	csem_init(sem, 0);
+	cwait(sem);*/
 	id1 = ccreate(func1, (void *)&i, 0);
 
 	printf("Eu sou a main após a criação de ID0 e ID1\n");
-
-	cyield();
+    cjoin(2);
+	//cyield();
 
 	printf("Eu sou a main voltando para terminar o programa\n");
+	//cyield();
 
 }

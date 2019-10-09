@@ -9,7 +9,7 @@
 1553892179 /home/aluno/Repositorios/cthread/include/cthread.h
 	"support.h"
 
-1570580078 source:/home/aluno/Repositorios/cthread/exemplos/exemplo2.c
+1570631411 source:/home/aluno/Repositorios/cthread/exemplos/exemplo2.c
 	<stdio.h>
 	"../include/cthread.h"
 	"ucontext.h"
@@ -32,7 +32,7 @@
 	<stdio.h>
 	<stdlib.h>
 
-1570580545 source:/home/aluno/Repositorios/cthread/src/cthread.c
+1570631527 source:/home/aluno/Repositorios/cthread/src/cthread.c
 	<stdio.h>
 	<stdlib.h>
 	<string.h>
