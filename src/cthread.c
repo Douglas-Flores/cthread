@@ -428,6 +428,6 @@ int cjoin(int tid){
 }
 
 int cidentify (char *name, int size) {
-    strncpy (name, "Douglas Souza Flores - 262524\nGiulia - 000000", size);
+    strncpy (name, "Douglas Souza Flores - 262524\nGiulia Rocha Giozza - 183153", size);
     return 0;
 }
