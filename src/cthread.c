@@ -66,19 +66,9 @@ void escalonador(){
 
 void terminar(){
     TCB_t *tcb_current = exec->first->node;
-    //getcontext(&(tcb_current->context));
-
-    /*if(estaSendoEsperada(tcb_atual->tid)){
-    terminaJoin(tcb_atual->tid);
-    }
-    free(&(tcb_atual->context));
-    free(tcb_atual);
-    setcontext(init);*/
 
     FirstFila2(exec);
     DeleteAtIteratorFila2(exec);
-    //free(&(tcb_current->context));
-    //free(tcb_current);
 
     TCB_t* newTCB = (TCB_t*) malloc(sizeof(TCB_t));
     newTCB = getNextApto();
@@ -188,18 +178,16 @@ int csem_init(csem_t *sem, int count){
 
 }
 
-/*int cwait(csem_t *sem){
+int cwait(csem_t *sem){
     TCB_t* tcb_current = exec->first->node;
 
-    if(sem->count > 0){
-        sem->count--;
-    }
-    else{
-        sem->count--;
+    sem->count--;
+    if(sem->count <= 0){
         AppendFila2(sem->fila, tcb_current);
+        //CHAMAR ESCALONADOR
     }
 
-}*/
+}
 
 int cidentify (char *name, int size) {
     strncpy (name, "Douglas Souza Flores - 262524\nGiulia - 000000", size);
