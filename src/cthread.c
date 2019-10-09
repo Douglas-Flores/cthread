@@ -159,6 +159,61 @@ int isWaited(int tid){
     return FALSE;
 }
 
+int exists(int tid){
+    //PROCURA NA FILA DE APTOS
+    if(NextFila2(apto) == 1)
+        return FALSE;
+
+    if(FirstFila2(apto) != 0)
+        return FALSE;
+
+    PNODE2 newNode = apto->first;
+    TCB_t *tcb_current = newNode->node;
+    apto->it = apto->first;
+    int i = 0;
+
+    do{
+        if(i==0)
+            i = 1;
+        else
+            newNode = newNode->next;
+
+        tcb_current = newNode->node;
+
+        if(tcb_current->tid == tid)
+            return TRUE;
+
+    }while(NextFila2(apto) == 0);
+
+    //PROCURA NA FILA DE BLOQUEADOS
+    if(NextFila2(bloqueado) == 1)
+        return FALSE;
+
+    if(FirstFila2(bloqueado) != 0)
+        return FALSE;
+
+    newNode = bloqueado->first;
+    tcb_current = newNode->node;
+    bloqueado->it = bloqueado->first;
+    i = 0;
+
+    do{
+        if(i==0)
+            i = 1;
+        else
+            newNode = newNode->next;
+
+        tcb_current = newNode->node;
+
+        if(tcb_current->tid == tid)
+            return TRUE;
+
+    }while(NextFila2(bloqueado) == 0);
+
+
+    return FALSE;
+}
+
 int initialize(){
     flag_init = 1;
 
@@ -241,7 +296,7 @@ int ccreate (void* (*start)(void*), void *arg, int prio){
     AppendFila2(apto, newTCB);
 
 
-    return 0;
+    return newTCB->tid;
 }
 
 int cyield(void){
@@ -339,6 +394,9 @@ int csignal(csem_t *sem){
 }
 
 int cjoin(int tid){
+    if(exists(tid) == FALSE)
+        return -1;
+
     if(isWaited(tid) == TRUE)
         return -1;
 

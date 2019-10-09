@@ -17,7 +17,7 @@ csem_t* sem;
 void* func0(void *arg) {
 	printf("Eu sou a thread ID0 imprimindo %d\n", *((int *)arg));
 	//csignal(sem);
-	cjoin(2);
+	//cjoin(2);
 	printf("Balela\n");
 }
 
@@ -37,7 +37,8 @@ int main() {
 	id1 = ccreate(func1, (void *)&i, 0);
 
 	printf("Eu sou a main após a criação de ID0 e ID1\n");
-    cjoin(2);
+    cjoin(id0);
+    cjoin(id1);
 	//cyield();
 
 	printf("Eu sou a main voltando para terminar o programa\n");
