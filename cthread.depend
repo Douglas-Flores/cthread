@@ -51,3 +51,32 @@
 	"../include/cthread.h"
 	"../include/cdata.h"
 
+1570646611 source:/home/aluno/Sisop20192/cthread/exemplos/exemplo2.c
+	<stdio.h>
+	"../include/cthread.h"
+	"ucontext.h"
+
+1570646611 /home/aluno/Sisop20192/cthread/include/cthread.h
+	"support.h"
+
+1570646611 /home/aluno/Sisop20192/cthread/include/support.h
+
+1570646611 source:/home/aluno/Sisop20192/cthread/src/lib.c
+	<stdio.h>
+	<string.h>
+	"../include/support.h"
+	"../include/cthread.h"
+	"../include/cdata.h"
+
+1570646611 /home/aluno/Sisop20192/cthread/include/cdata.h
+	"ucontext.h"
+
+1570673620 source:/home/aluno/Sisop20192/cthread/src/cthread.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	"../include/support.h"
+	"../include/cthread.h"
+	"../include/cdata.h"
+	<signal.h>
+

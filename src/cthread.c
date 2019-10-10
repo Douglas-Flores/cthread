@@ -20,6 +20,9 @@ PFILA2 apto, bloqueado, exec, join;
 ucontext_t *init = NULL, *end = NULL;
 TCB_t *MAIN, *executando;
 
+int isWaited(int i);
+int unblockWaiting(TCB_t* process);
+
 int novoTID(){
     id_atual++;
     return id_atual;
@@ -51,7 +54,7 @@ TCB_t* getNextApto(){
         return nextProcess;
     }
 
-    return -1;
+    return (TCB_t*)-1;
 }
 
 /*void escalonador(){
@@ -134,7 +137,7 @@ int isWaited(int tid){
         return FALSE;
 
     PNODE2 newNode = join->first;
-    TCB_t *tcb_current = newNode->node;
+    //TCB_t* tcb_current = newNode->node;
     join->it = join->first;
     int *waited;
     int i = 0;
@@ -145,7 +148,7 @@ int isWaited(int tid){
         else
             newNode = newNode->next;
 
-        tcb_current = newNode->node;
+        //tcb_current = newNode->node;
 
         NextFila2(join);
         newNode = newNode->next;
@@ -371,7 +374,7 @@ int cwait(csem_t *sem){
 }
 
 int csignal(csem_t *sem){
-    TCB_t* tcb_current = exec->first->node;
+    //TCB_t* tcb_current = exec->first->node;
 
     if(sem->count <= 0 || NextFila2(sem->fila) != 1){
         //printf("TID Saindo: %d\n", tcb_current->tid);
