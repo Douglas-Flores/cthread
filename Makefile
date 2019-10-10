@@ -12,7 +12,7 @@ octhread: $(SRC_DIR)/cthread.c
 	mv cthread.o $(BIN_DIR)
 
 alib: $(BIN_DIR)/cthread.o $(BIN_DIR)/support.o
-	ar crs libcthread.a $^
+	ar crs libcthread.a
 	mv libcthread.a $(LIB_DIR)
 
 clean:
